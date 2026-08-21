@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { SuccessState } from "@/components/states";
+import { InterestPicker } from "@/components/onboarding/interest-picker";
+import { normalizeInterestIds } from "@/lib/data/interests";
 import { usePlatform } from "@/lib/data/platform-store";
 import { levelFromXp } from "@/lib/utils";
 import { useState } from "react";
@@ -17,7 +19,7 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [name, setName] = useState(user?.name ?? "");
   const [skills, setSkills] = useState(profile?.skills.join(", ") ?? "");
-  const [interests, setInterests] = useState(profile?.interests.join(", ") ?? "");
+  const [interests, setInterests] = useState(() => normalizeInterestIds(profile?.interests ?? []));
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -46,7 +48,7 @@ export default function ProfilePage() {
           store.updateProfile(sid, {
             name,
             skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
-            interests: interests.split(",").map((s) => s.trim()).filter(Boolean),
+            interests,
           });
           setSaved(true);
         }}
@@ -61,8 +63,9 @@ export default function ProfilePage() {
           <Input id="skills" value={skills} onChange={(e) => setSkills(e.target.value)} required />
         </div>
         <div>
-          <Label htmlFor="interests">Interests</Label>
-          <Input id="interests" value={interests} onChange={(e) => setInterests(e.target.value)} required />
+          <Label id="interests-label">Interests</Label>
+          <p className="mb-2 text-xs text-muted">Used for recommendations, missions and your learning path.</p>
+          <InterestPicker selected={interests} onChange={setInterests} labelledBy="interests-label" />
         </div>
         <Button type="submit">Save</Button>
         {saved ? <SuccessState title="Profile updated." /> : null}

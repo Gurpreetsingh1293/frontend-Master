@@ -54,7 +54,7 @@ export type PlatformState = {
   }) => { ok: boolean; error?: string };
   updateProfile: (
     userId: string,
-    patch: { name?: string; skills?: string[]; interests?: string[] },
+    patch: { name?: string; skills?: string[]; interests?: string[]; onboarded?: boolean },
   ) => void;
   enroll: (activityId: string, studentId: string) => void;
   startActivity: (activityId: string, studentId: string) => void;
@@ -185,6 +185,7 @@ export const usePlatform = create<PlatformState>()(
                   ...p,
                   skills: patch.skills ?? p.skills,
                   interests: patch.interests ?? p.interests,
+                  onboarded: patch.onboarded ?? p.onboarded,
                 }
               : p,
           ),
