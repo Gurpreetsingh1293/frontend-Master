@@ -19,7 +19,7 @@ export function StreakCalendar({
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
-  const monthLabel = now.toLocaleDateString("en-IN", { month: "long" });
+  const monthLabel = now.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
   const fires = inferredStreakDays(streak, lastActiveAt);
   const today = isoDay(now);
   const first = new Date(year, month, 1);
@@ -60,7 +60,15 @@ export function StreakCalendar({
                 future && "text-muted/50",
                 !future && !fired && "text-plum",
               )}
-              title={fired ? `${cell.iso}: streak day` : isToday ? "Today" : future ? "Upcoming" : cell.iso}
+              aria-label={
+                fired
+                  ? `${cell.iso}, streak day${isToday ? ", today" : ""}`
+                  : isToday
+                    ? `${cell.iso}, today`
+                    : future
+                      ? `${cell.iso}, upcoming`
+                      : cell.iso
+              }
             >
               {fired ? <span aria-hidden>🔥</span> : cell.day}
             </span>
@@ -75,23 +83,24 @@ export function StreakCalendar({
 
   if (compact) {
     return (
-      <div className="relative px-1 pb-3">
+      <div className="relative px-1 py-2">
         <button
           type="button"
           className="flex w-full flex-col items-center rounded-xl py-2 text-gold hover:bg-ivory"
           aria-expanded={open}
-          aria-label={`${streak}-day streak. Open calendar.`}
+          aria-label={`${streak}-day streak. ${open ? "Hide" : "Show"} calendar.`}
+          title={`${streak}-day streak`}
           onClick={() => setOpen((v) => !v)}
         >
           <span aria-hidden>🔥</span>
           <span className="text-[10px] font-semibold text-plum">{streak}</span>
         </button>
         {open ? (
-          <div className="absolute bottom-12 left-12 z-20 w-52 rounded-xl border border-line bg-card p-2 shadow-md">{grid}</div>
+          <div className="absolute bottom-full left-full z-20 mb-1 ml-2 w-52 rounded-xl border border-line bg-card p-2 shadow-md">{grid}</div>
         ) : null}
       </div>
     );
   }
 
-  return <div className="mx-2 mb-3 rounded-xl border border-line bg-ivory/60 p-2">{grid}</div>;
+  return <div className="mx-2 my-2 rounded-xl border border-line bg-ivory/60 p-2">{grid}</div>;
 }

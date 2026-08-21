@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { Activity, ActivityType, Enrollment, EnrollmentStatus } from "@/lib/types";
 import { catmullRomPath } from "@/lib/data/learning-journey";
 import { usePlatform } from "@/lib/data/platform-store";
 import { cn, formatDate, levelFromXp } from "@/lib/utils";
 import { JourneyRabbit } from "@/components/student/journey-rabbit";
 import { JourneyDetailDialog } from "@/components/student/journey-detail";
+import { JourneyGarden } from "@/components/student/journey-garden";
 
 type Kind = "completed" | "current" | "locked";
+type Lane = "above" | "below" | "left" | "right";
 
 const TYPE_LABEL: Record<ActivityType, string> = {
   course: "Course",
@@ -28,9 +30,9 @@ function isDone(status: EnrollmentStatus) {
 }
 
 function layout(count: number, variant: "desktop" | "mobile") {
-  const vb = variant === "desktop" ? { w: 720, h: 300 } : { w: 320, h: Math.max(520, count * 96) };
-  const padX = variant === "desktop" ? 78 : 96;
-  const padY = variant === "desktop" ? 62 : 44;
+  const vb = variant === "desktop" ? { w: 1100, h: 640 } : { w: 380, h: Math.max(920, count * 128) };
+  const padX = variant === "desktop" ? 108 : 148;
+  const padY = variant === "desktop" ? 156 : 72;
   const pts = Array.from({ length: count }, (_, i) => {
     const t = count <= 1 ? 0 : i / (count - 1);
     const wave = Math.sin(t * Math.PI * 2);
@@ -38,13 +40,13 @@ function layout(count: number, variant: "desktop" | "mobile") {
       return {
         x: padX + t * (vb.w - 2 * padX),
         y: vb.h / 2 + wave * (vb.h / 2 - padY),
-        anchor: (wave >= 0 ? "bottom" : "top") as "top" | "bottom",
+        lane: (wave >= 0 ? "below" : "above") as Lane,
       };
     }
     return {
       x: vb.w / 2 + wave * (vb.w / 2 - padX),
       y: padY + t * (vb.h - 2 * padY),
-      anchor: (wave >= 0 ? "left" : "right") as "left" | "right",
+      lane: (wave >= 0 ? "right" : "left") as Lane,
     };
   });
   return { vb, pts, d: catmullRomPath(pts) };
@@ -53,10 +55,10 @@ function layout(count: number, variant: "desktop" | "mobile") {
 function ProgressStars({ progress }: { progress: number }) {
   const filled = Math.max(0, Math.min(5, Math.round(progress / 20)));
   return (
-    <span className="mt-0.5 flex items-center justify-center gap-0.5" aria-label={`Progress ${filled} of 5`}>
+    <span className="mt-0.5 flex items-center gap-0.5" aria-label={`Progress ${filled} of 5`}>
       {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} className={i < filled ? "text-gold" : "text-line"} aria-hidden>
-          ★
+        <span key={i} className={i < filled ? "text-gold" : "text-muted/40"} aria-hidden>
+          {i < filled ? "★" : "☆"}
         </span>
       ))}
     </span>
@@ -87,29 +89,6 @@ function nodeKind(status: EnrollmentStatus, isFocus: boolean): Kind {
   if (isFocus) return "current";
   if (status === "not_started") return "locked";
   return "current";
-}
-
-function PlaygroundArt({ vb }: { vb: { w: number; h: number } }) {
-  return (
-    <g pointerEvents="none" aria-hidden>
-      <rect width={vb.w} height={vb.h} fill="#d9ebf6" />
-      <ellipse cx={vb.w * 0.5} cy={vb.h + 40} rx={vb.w * 0.7} ry={vb.h * 0.55} fill="#d5e6b8" />
-      <ellipse cx={vb.w * 0.18} cy={vb.h * 0.92} rx="70" ry="22" fill="#c8dba8" />
-      <ellipse cx={vb.w * 0.82} cy={vb.h * 0.9} rx="80" ry="24" fill="#c8dba8" />
-      <circle cx="70" cy="36" r="16" fill="#f4f8fb" />
-      <circle cx="86" cy="40" r="12" fill="#f4f8fb" />
-      <circle cx={vb.w - 90} cy="30" r="14" fill="#f4f8fb" />
-      <circle cx={vb.w - 74} cy="36" r="10" fill="#f4f8fb" />
-      <rect x="28" y={vb.h - 58} width="6" height="28" rx="2" fill="#8c3d7a" opacity="0.45" />
-      <circle cx="31" cy={vb.h - 62} r="12" fill="#7aa35a" opacity="0.55" />
-      <rect x={vb.w - 42} y={vb.h - 54} width="6" height="24" rx="2" fill="#8c3d7a" opacity="0.4" />
-      <circle cx={vb.w - 39} cy={vb.h - 58} r="11" fill="#7aa35a" opacity="0.5" />
-      <circle cx="48" cy={vb.h - 36} r="3" fill="#ec1975" opacity="0.35" />
-      <circle cx="58" cy={vb.h - 32} r="2.5" fill="#c9a227" opacity="0.45" />
-      <path d={vb.w > 400 ? "M620 230 l24 0 l-12 28 z" : "M268 70 l18 0 l-9 22 z"} fill="#8c3d7a" opacity="0.22" />
-      <path d={vb.w > 400 ? "M610 258 h44" : "M260 94 h36"} stroke="#8c3d7a" strokeWidth="3" opacity="0.22" strokeLinecap="round" />
-    </g>
-  );
 }
 
 export function EnrolledLearningJourney({
@@ -154,9 +133,9 @@ export function EnrolledLearningJourney({
         <div>
           <h2 className="font-serif text-2xl text-plum">Your Learning Journey</h2>
           {next ? (
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-1 text-sm leading-relaxed text-muted">
               Next milestone: <span className="font-semibold text-barbie">{next.activity.title}</span>
-              <span className="text-muted">
+              <span>
                 {" "}
                 · {next.activity.xpReward} XP · due {formatDate(next.activity.dueDate)}
               </span>
@@ -191,6 +170,7 @@ function JourneyCanvas({
   studentId: string;
 }) {
   const store = usePlatform();
+  const uid = useId();
   const { vb, pts, d } = layout(items.length, variant);
   const progress = items.length <= 1 ? 1 : focusIndex / (items.length - 1);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -198,17 +178,17 @@ function JourneyCanvas({
   const rabbit = pts[focusIndex];
 
   return (
-    <div className="relative overflow-visible px-1 py-8">
+    <div className="relative overflow-visible">
       <svg viewBox={`0 0 ${vb.w} ${vb.h}`} className="h-auto w-full" role="img" aria-labelledby={`journey-${variant}-title`}>
         <title id={`journey-${variant}-title`}>Playground learning path through your enrolled activities</title>
-        <PlaygroundArt vb={vb} />
-        <path d={d} fill="none" stroke="#c9bfb0" strokeWidth="10" strokeLinecap="round" />
-        <path d={d} fill="none" stroke="var(--navy)" strokeWidth="4" strokeLinecap="round" opacity="0.55" />
+        <JourneyGarden vb={vb} uid={uid} nodes={pts} />
+        <path d={d} fill="none" stroke="#e8f0d8" strokeWidth="18" strokeLinecap="round" />
+        <path d={d} fill="none" stroke="#1a1630" strokeWidth="5" strokeLinecap="round" opacity="0.35" />
         <path
           d={d}
           fill="none"
-          stroke="var(--purple)"
-          strokeWidth="4"
+          stroke="#5e8f4a"
+          strokeWidth="5"
           strokeLinecap="round"
           pathLength={1}
           strokeDasharray="1"
@@ -218,10 +198,13 @@ function JourneyCanvas({
       </svg>
       {rabbit ? (
         <div
-          className="pointer-events-none absolute z-[2] -translate-x-[118%] -translate-y-[70%]"
+          className={cn(
+            "pointer-events-none absolute z-[3]",
+            variant === "desktop" ? "-translate-x-[130%] -translate-y-[108%]" : "-translate-x-[125%] -translate-y-[95%]",
+          )}
           style={{ left: `${(rabbit.x / vb.w) * 100}%`, top: `${(rabbit.y / vb.h) * 100}%` }}
         >
-          <JourneyRabbit className="rabbit-idle h-12 w-11 md:h-14 md:w-12" />
+          <JourneyRabbit className="rabbit-idle h-12 w-11 md:h-[3.35rem] md:w-12" />
         </div>
       ) : null}
       {items.map((item, i) => {
@@ -238,43 +221,52 @@ function JourneyCanvas({
             <button
               type="button"
               aria-current={focused ? "step" : undefined}
-              aria-label={`${item.activity.title}, ${TYPE_LABEL[item.activity.type]}, ${stateLabel}, ${item.enrollment.progress} percent. Open details.`}
+              aria-label={`${item.activity.title}, ${TYPE_LABEL[item.activity.type]}, ${stateLabel}, ${item.enrollment.progress} percent${unlock ? `. ${unlock}` : ""}. Open details.`}
               onClick={() => setOpenId(item.enrollment.id)}
               className={cn(
-                "absolute z-[1] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-barbie",
-                kind === "completed" && "h-8 w-8 border-blue bg-blue text-white",
+                "absolute z-[2] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-barbie",
+                kind === "completed" && "h-9 w-9 border-[#5e8f4a] bg-[#5e8f4a] text-white",
                 kind === "current" && focused &&
-                  "journey-pulse h-10 w-10 border-barbie bg-barbie text-white shadow-[0_0_0_6px_rgba(236,25,117,0.16)]",
-                kind === "current" && !focused && "h-8 w-8 border-barbie bg-card text-barbie",
-                kind === "locked" && "h-8 w-8 border-line bg-card text-purple",
+                  "journey-pulse h-11 w-11 border-barbie bg-barbie text-white shadow-[0_0_0_6px_rgba(236,25,117,0.16)]",
+                kind === "current" && !focused && "h-9 w-9 border-barbie bg-card text-barbie",
+                kind === "locked" && "h-9 w-9 border-[#c5bdb2] bg-[#f4efe6] text-[#6a6478]",
               )}
             >
               <span className="flex h-full w-full items-center justify-center">
                 <NodeMark kind={kind} />
               </span>
             </button>
-            <button
-              type="button"
-              tabIndex={-1}
-              onClick={() => setOpenId(item.enrollment.id)}
+            <div
               className={cn(
-                "absolute w-[8.5rem] text-left text-[11px] leading-snug sm:w-40 sm:text-xs",
-                pt.anchor === "bottom" && "top-6 left-1/2 -translate-x-1/2 text-center",
-                pt.anchor === "top" && "bottom-6 left-1/2 -translate-x-1/2 text-center",
-                pt.anchor === "left" && "right-6 top-1/2 -translate-y-1/2 text-right",
-                pt.anchor === "right" && "left-6 top-1/2 -translate-y-1/2 text-left",
+                "absolute z-[1] w-[9.75rem] sm:w-[10.5rem]",
+                pt.lane === "below" && "top-7 left-1/2 -translate-x-1/2",
+                pt.lane === "above" && "bottom-7 left-1/2 -translate-x-1/2",
+                pt.lane === "left" && "right-7 top-1/2 -translate-y-1/2",
+                pt.lane === "right" && "left-7 top-1/2 -translate-y-1/2",
               )}
             >
-              <p className="line-clamp-2 font-semibold text-plum">{item.activity.title}</p>
-              <p className="text-purple">
-                {TYPE_LABEL[item.activity.type]} · {item.enrollment.progress}%
-              </p>
-              <p className="font-medium text-gold">
-                {kind === "completed" ? `${item.activity.xpReward} XP earned` : `${item.activity.xpReward} XP`}
-              </p>
-              <ProgressStars progress={item.enrollment.progress} />
-              {unlock ? <p className="mt-0.5 text-[10px] text-muted">{unlock}</p> : null}
-            </button>
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setOpenId(item.enrollment.id)}
+                className={cn(
+                  "w-full rounded-xl border border-line/90 bg-[#fffcf7]/95 px-2.5 py-2 text-left shadow-[0_6px_16px_-12px_rgba(26,22,48,0.45)]",
+                  pt.lane === "above" || pt.lane === "below" ? "text-center" : pt.lane === "left" ? "text-right" : "text-left",
+                )}
+              >
+                <p className="text-[12px] font-semibold leading-snug text-plum sm:text-[13px]">{item.activity.title}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-purple">
+                  {TYPE_LABEL[item.activity.type]} · {item.enrollment.progress}%
+                </p>
+                <p className="text-[11px] font-medium text-gold">
+                  {kind === "completed" ? `${item.activity.xpReward} XP earned` : `${item.activity.xpReward} XP`}
+                </p>
+                <span className={cn("flex", pt.lane === "above" || pt.lane === "below" ? "justify-center" : pt.lane === "left" ? "justify-end" : "justify-start")}>
+                  <ProgressStars progress={item.enrollment.progress} />
+                </span>
+                {unlock ? <p className="mt-0.5 text-[10px] leading-snug text-muted">{unlock}</p> : null}
+              </button>
+            </div>
           </div>
         );
       })}

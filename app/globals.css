@@ -143,8 +143,9 @@ h3,
 }
 
 .playground-scene {
+  overflow: hidden;
   border-radius: 1.1rem;
-  overflow: visible;
+  background: #b7d48a;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -159,12 +160,23 @@ h3,
   .rabbit-idle {
     animation: rabbit-idle 2.8s ease-in-out infinite;
   }
+
+  .rabbit-ear {
+    transform-box: fill-box;
+    transform-origin: center bottom;
+    animation: rabbit-ear 3.4s ease-in-out infinite;
+  }
+
+  .rabbit-ear-right {
+    animation-delay: 0.4s;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .journey-progress,
   .journey-pulse,
-  .rabbit-idle {
+  .rabbit-idle,
+  .rabbit-ear {
     animation: none;
     transition: none;
   }
@@ -187,5 +199,15 @@ h3,
   }
   50% {
     transform: translateY(-4px);
+  }
+}
+
+@keyframes rabbit-ear {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-7deg);
   }
 }

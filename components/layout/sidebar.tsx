@@ -295,7 +295,7 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "hidden shrink-0 flex-col overflow-y-auto border-r border-line bg-card md:flex",
+        "sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-line bg-card md:flex",
         "transition-[width] duration-200 ease-out",
         collapsed ? "w-[4.25rem]" : "w-64",
       )}
@@ -322,13 +322,17 @@ export function Sidebar({
       </div>
       {variant === "student" ? (
         <>
-          <StudentNav collapsed={collapsed} />
-          <div className="mt-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <StudentNav collapsed={collapsed} />
+          </div>
+          <div className="shrink-0 border-t border-line bg-card">
             <StreakCalendar streak={profile?.streak ?? 0} lastActiveAt={profile?.lastActiveAt} compact={collapsed} />
           </div>
         </>
       ) : (
-        <AdminNav collapsed={collapsed} />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <AdminNav collapsed={collapsed} />
+        </div>
       )}
     </aside>
   );
@@ -340,15 +344,19 @@ export function StudentMobileDrawer({ open, onClose }: { open: boolean; onClose:
   return (
     <div className="fixed inset-0 z-40 md:hidden">
       <button type="button" className="absolute inset-0 bg-navy/40" aria-label="Close menu" onClick={onClose} />
-      <div className="relative flex h-full w-[min(19rem,90vw)] flex-col overflow-y-auto bg-card shadow-xl" role="dialog" aria-modal="true" aria-label="Student navigation">
-        <div className="px-4 py-5">
+      <div className="relative flex h-full w-[min(19rem,90vw)] flex-col overflow-hidden bg-card shadow-xl" role="dialog" aria-modal="true" aria-label="Student navigation">
+        <div className="shrink-0 px-4 py-5">
           <Logo />
           <button type="button" onClick={onClose} className="mt-3 text-sm font-medium text-barbie">
             Close
           </button>
         </div>
-        <StudentNav collapsed={false} onNavigate={onClose} />
-        <StreakCalendar streak={profile?.streak ?? 0} lastActiveAt={profile?.lastActiveAt} />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <StudentNav collapsed={false} onNavigate={onClose} />
+        </div>
+        <div className="shrink-0 border-t border-line bg-card">
+          <StreakCalendar streak={profile?.streak ?? 0} lastActiveAt={profile?.lastActiveAt} />
+        </div>
       </div>
     </div>
   );
