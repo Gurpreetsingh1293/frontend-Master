@@ -66,7 +66,7 @@
   --color-teal: var(--teal);
   --color-jungle: var(--jungle);
   --font-sans: var(--font-sans);
-  --font-serif: var(--font-serif);
+  --font-serif: var(--font-sans);
 }
 
 html,
@@ -83,7 +83,8 @@ h1,
 h2,
 h3,
 .font-serif {
-  font-family: var(--font-serif), ui-serif, Georgia, serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
   color: var(--navy);
 }
 
@@ -141,6 +142,11 @@ h3,
   background: var(--pink);
 }
 
+.playground-scene {
+  border-radius: 1.1rem;
+  overflow: visible;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .journey-progress {
     transition: stroke-dashoffset 420ms ease;
@@ -149,11 +155,16 @@ h3,
   .journey-pulse {
     animation: journey-pulse 2.6s ease-in-out infinite;
   }
+
+  .rabbit-idle {
+    animation: rabbit-idle 2.8s ease-in-out infinite;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .journey-progress,
-  .journey-pulse {
+  .journey-pulse,
+  .rabbit-idle {
     animation: none;
     transition: none;
   }
@@ -166,5 +177,15 @@ h3,
   }
   50% {
     box-shadow: 0 0 0 10px rgba(236, 25, 117, 0.08);
+  }
+}
+
+@keyframes rabbit-idle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
   }
 }

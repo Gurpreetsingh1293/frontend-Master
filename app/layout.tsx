@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 
-const sans = Source_Sans_3({
+const sans = Plus_Jakarta_Sans({
   variable: "--font-sans",
-  subsets: ["latin"],
-});
-
-const serif = Fraunces({
-  variable: "--font-serif",
   subsets: ["latin"],
 });
 
@@ -20,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable} h-full antialiased`}>
+    <html lang="en" className={`${sans.variable} h-full antialiased`}>
       <body className="min-h-full text-plum">
         <Providers>{children}</Providers>
       </body>
