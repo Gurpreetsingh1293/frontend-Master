@@ -47,7 +47,6 @@ const studentGroups: { id: string; heading: string; items: { href: string; key?:
     id: "progress",
     heading: "PROGRESS",
     items: [
-      { href: "/student/gamification", key: "gamification", icon: Sparkles },
       { href: "/student/achievements", key: "achievements", icon: Award },
       { href: "/student/missions", key: "missions", icon: Flag },
       { href: "/student/leaderboard", key: "leaderboard", icon: Trophy },

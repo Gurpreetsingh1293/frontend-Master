@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ActivityCard, CompletionCard, MissionCard, RankCard, StreakCard, XPCard } from "@/components/cards";
+import { EnrolledLearningJourney } from "@/components/student/enrolled-journey";
 import { usePlatform } from "@/lib/data/platform-store";
 import { coachReply } from "@/lib/ai/coach";
 import { levelFromXp } from "@/lib/utils";
@@ -60,6 +61,12 @@ export default function StudentHome() {
         <RankCard rank={rank} />
         <CompletionCard value={completion} hint={`${completed} done · ${pending} open`} />
       </div>
+      <EnrolledLearningJourney
+        enrollments={mine}
+        activities={store.activities}
+        xp={profile?.xp ?? 0}
+        completion={completion}
+      />
       <section>
         <h2 className="font-serif text-2xl">{t.continueLearning}</h2>
         <div className="mt-3 grid gap-4 md:grid-cols-2">
