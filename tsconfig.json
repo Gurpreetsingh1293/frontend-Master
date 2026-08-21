@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "backend/shared-types" },
+    { "path": "ai/ai-client" },
+    { "path": "ai/ai-judge" },
+    { "path": "ai/ai-coach" }
+  ]
+}

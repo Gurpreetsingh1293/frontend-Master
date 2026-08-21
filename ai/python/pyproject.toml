@@ -1,0 +1,27 @@
+[project]
+name = "katalyst-analysis"
+version = "0.1.0"
+description = "Offline analysis/algorithm scripts for Katalyst: AI Judge golden-set eval (§9), peer-matching (§15.3), squad effectiveness (§15.6)."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.7"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

@@ -1,0 +1,23 @@
+[
+  {
+    "case_id": "assignment-001",
+    "true_levels": { "requirement_completion": "excellent", "quality_accuracy": "proficient", "timeliness": "excellent" },
+    "ai_levels": { "requirement_completion": "excellent", "quality_accuracy": "proficient", "timeliness": "excellent" },
+    "true_xp": 90,
+    "ai_xp": 90
+  },
+  {
+    "case_id": "assignment-002",
+    "true_levels": { "requirement_completion": "proficient", "quality_accuracy": "developing", "timeliness": "excellent" },
+    "ai_levels": { "requirement_completion": "excellent", "quality_accuracy": "developing", "timeliness": "excellent" },
+    "true_xp": 70,
+    "ai_xp": 78
+  },
+  {
+    "case_id": "assignment-003",
+    "true_levels": { "requirement_completion": "not_demonstrated", "quality_accuracy": "not_demonstrated", "timeliness": "not_demonstrated" },
+    "ai_levels": { "requirement_completion": "not_demonstrated", "quality_accuracy": "not_demonstrated", "timeliness": "not_demonstrated" },
+    "true_xp": 0,
+    "ai_xp": 0
+  }
+]

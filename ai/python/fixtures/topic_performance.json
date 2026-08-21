@@ -1,0 +1,10 @@
+[
+  { "user_id": "alice", "subject": "Algebra", "topic": "quadratic_equations", "accuracy_pct": 40, "attempts": 5, "last_attempt_at": "2026-08-01T00:00:00Z", "trend": "declining" },
+  { "user_id": "alice", "subject": "Geometry", "topic": "triangles", "accuracy_pct": 88, "attempts": 8, "last_attempt_at": "2026-08-10T00:00:00Z", "trend": "stable" },
+  { "user_id": "bilal", "subject": "Algebra", "topic": "quadratic_equations", "accuracy_pct": 90, "attempts": 10, "last_attempt_at": "2026-08-10T00:00:00Z", "trend": "improving" },
+  { "user_id": "bilal", "subject": "Geometry", "topic": "triangles", "accuracy_pct": 35, "attempts": 4, "last_attempt_at": "2026-08-05T00:00:00Z", "trend": "declining" },
+  { "user_id": "chen", "subject": "Algebra", "topic": "linear_equations", "accuracy_pct": 82, "attempts": 6, "last_attempt_at": "2026-08-11T00:00:00Z", "trend": "improving" },
+  { "user_id": "chen", "subject": "Biology", "topic": "cell_structure", "accuracy_pct": 30, "attempts": 3, "last_attempt_at": "2026-08-02T00:00:00Z", "trend": "declining" },
+  { "user_id": "diya", "subject": "Biology", "topic": "cell_structure", "accuracy_pct": 91, "attempts": 9, "last_attempt_at": "2026-08-12T00:00:00Z", "trend": "stable" },
+  { "user_id": "diya", "subject": "Algebra", "topic": "linear_equations", "accuracy_pct": 44, "attempts": 5, "last_attempt_at": "2026-08-03T00:00:00Z", "trend": "declining" }
+]
