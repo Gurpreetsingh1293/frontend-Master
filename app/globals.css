@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+:root {
+  --sand: #f4efe6;
+  --stone: #1c1917;
+  --forest: #1f3d2b;
+  --moss: #3d6b4f;
+  --gold: #b08d3e;
+  --paper: #faf7f2;
+}
+
+@theme inline {
+  --color-sand: var(--sand);
+  --color-forest: var(--forest);
+  --color-moss: var(--moss);
+  --color-gold: var(--gold);
+  --color-paper: var(--paper);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--stone);
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.font-serif {
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 2px;
+}
