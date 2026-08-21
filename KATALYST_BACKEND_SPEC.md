@@ -1,12 +1,15 @@
 # Katalyst — Backend Spec (MVP, MongoDB)
 
-> Consolidates `Katalyst_Build_Spec_for_Claude_Code.md` (production architecture, §1–§13) and
+> Consolidates `Katalyst_Build_Spec_for_Claude_Code.md` (production architecture, §1–§13),
 > `KATALYST_BACKEND_MVP_HANDOFF.md` (hackathon-MVP delta: two-portal RBAC, personalisation,
-> meetings, notifications) into one backend-only spec. **Database is now MongoDB** (Atlas), not
-> Postgres/Supabase — every schema below is a Mongo collection, not a SQL table. Where the two
-> source docs conflict, the MVP handoff's decisions win (two roles, no Mentor portal, personalised
-> onboarding). AI Judge/AI Coach implementation detail lives in `KATALYST_AI_SPEC.md` — this doc
-> only covers what the backend must expose to and consume from `/ai`.
+> meetings, notifications), and the backend-relevant deltas from the visual/UX design brief
+> (`Katalyst_Claude_Prompt.md`: skills catalogue, career goal, the journey map, and flexible
+> session rescheduling) into one backend-only spec. **Database is now MongoDB** (Atlas), not
+> Postgres/Supabase — every schema below is a Mongo collection, not a SQL table. Where source docs
+> conflict, the most specific/most recent decision wins (two roles, no Mentor portal, personalised
+> onboarding, weekly not daily streaks). AI Judge/AI Coach implementation detail lives in
+> `KATALYST_AI_SPEC.md` — this doc only covers what the backend must expose to and consume from
+> `/ai`.
 
 ---
 
@@ -79,11 +82,16 @@ Unique index on `email`. Index on `role`, `cohort`.
   _id: ObjectId,
   userId: ObjectId,                 // unique index, ref users
   collegeName: string | null,
+  dateOfBirth: Date | null,         // collected at onboarding step 1, per frontend spec §6.1
   academicField: string | null,     // interest_domain key
   programmeYear: number | null,     // 1-4
+  careerGoal: string | null,        // free-enter or picked from a short suggested list; onboarding step 4
   bio: string | null,
   interests: [                      // embedded — always read with the profile
     { interestKey: string, priority: number /* default 1 */, selectedAt: Date }
+  ],
+  skills: [                         // embedded — "skills to improve", onboarding step 3
+    { skillKey: string, selectedAt: Date }
   ],
   notificationPreferences: {
     emailNotificationsEnabled: boolean,     // default true
@@ -108,6 +116,24 @@ Unique index on `email`. Index on `role`, `cohort`.
 ```
 Seed set: `technology, business, leadership, communication, languages, financial_literacy,
 entrepreneurship, sustainability, professional_development, social_impact, digital_literacy`.
+
+### 3.3b `skill_domains` (seeded, admin-editable catalogue — same shape as `interest_domains`)
+
+```ts
+{
+  _id: ObjectId,
+  key: string,        // unique, e.g. "dsa"
+  name: string,        // "DSA"
+  description: string | null,
+  isActive: boolean,   // default true
+  createdAt: Date
+}
+```
+Seed set: `dsa, programming, web_development, git_github, cloud, databases, communication,
+leadership, problem_solving, system_design, project_management`. Powers onboarding step 3
+(§6.1 frontend spec), the editable skills list on the student profile, and `skills[]` tagging on
+`modules` (§3.4) so the recommendation engine and journey map (§7 below) can match students to
+skill-building activities, not just interest domains.
 
 ### 3.4 `modules`
 
@@ -286,10 +312,33 @@ mission_progress: { _id, missionId, userId: ObjectId | null, teamId: ObjectId | 
   participants: [                       // embedded — always read/written with the meeting
     { studentId: ObjectId, attendanceStatus: "pending"|"attended"|"missed"|"excused" }
   ],
+  reschedulable: boolean,               // default true; admin-set per meeting
   createdBy: ObjectId, createdAt: Date, updatedAt: Date
 }
 ```
 Index on `participants.studentId`, `startAt`.
+
+### 3.18b `meeting_reschedule_slots` (Admin-configured candidate slots + the outcome)
+
+```ts
+{
+  _id: ObjectId, meetingId: ObjectId,      // ref mentor_meetings
+  candidateSlots: [ { startAt: Date, endAt: Date } ],   // admin-entered open slots
+  deadline: Date,                          // reschedule cutoff — one calendar day before meeting.startAt
+  selectedByStudentId: ObjectId | null,    // set once a participant picks a slot
+  selectedSlot: { startAt: Date, endAt: Date } | null,
+  selectedAt: Date | null,
+  createdAt: Date, updatedAt: Date
+}
+```
+One document per meeting. `deadline` is computed as `meeting.startAt - 1 day` at creation and
+re-derived whenever Admin edits `startAt`. A student may only call the reschedule endpoint
+(§5.2) while `now < deadline`; the service layer rejects (`409`) any attempt after the deadline,
+and the frontend hides the affordance entirely rather than showing a disabled control (frontend
+spec §6.10). On a successful reschedule: update `mentor_meetings.startAt/endAt`, set
+`status='rescheduled'`, write this document's `selected*` fields, and fire the existing
+`meeting_updated` notification event (§9) — reschedule is just a student-initiated instance of the
+same "material meeting field changed" trigger Admin's own edits use.
 
 ### 3.19 `partner_organisations`
 
@@ -400,18 +449,25 @@ POST /auth/login             {email, password} -> {token, user}
 GET  /me                     -> current user + profile
 
 GET  /interests               -> active interest_domains
-POST /me/onboarding           {college_name, academic_field, programme_year, interest_keys[]}
+GET  /skills                  -> active skill_domains (§3.3b)
+POST /me/onboarding           {college_name, date_of_birth, academic_field, programme_year,
+                                interest_keys[], skill_keys[], career_goal}
 GET  /me/interests
 PUT  /me/interests             {interest_keys[]}   -- validates every key, replaces transactionally
+PUT  /me/skills                {skill_keys[]}       -- same pattern as interests
+PATCH /me/profile              {career_goal?, bio?, college_name?}
 ```
 
 ### 5.2 Student homepage
 ```
 GET /me/dashboard             -- aggregate read model, see §7
 GET /me/recommendations       -- see §6
+GET /me/journey               -- learning journey map read model, see §7b
 GET /me/notifications
 PATCH /me/notifications/:id/read
 GET /me/meetings
+GET /me/meetings/:id/reschedule-slots     -- candidate slots, only if reschedulable && before deadline
+POST /me/meetings/:id/reschedule           {slot_index}  -- 409 if past deadline or not reschedulable
 GET /me/xp
 GET /me/enrollments
 GET /leaderboard?scope=individual|team&window=week|month|year&cohort=
@@ -443,9 +499,10 @@ GET   /admin/dashboard
 GET   /reports?filters...
 
 GET   /admin/meetings
-POST  /admin/meetings          {mentor_id?, title, description, start_at, end_at, meeting_mode, meeting_link?, location?, participant_student_ids[]}
+POST  /admin/meetings          {mentor_id?, title, description, start_at, end_at, meeting_mode, meeting_link?, location?, participant_student_ids[], reschedulable?}
 GET   /admin/meetings/:id
 PATCH /admin/meetings/:id      -- diffs material fields, fires meeting_updated event (§9)
+PUT   /admin/meetings/:id/reschedule-slots   {candidate_slots[]}  -- admin-configured options, see §3.18b
 
 GET   /admin/partners
 POST  /admin/partners
@@ -498,7 +555,7 @@ Response shape per item — see §7's module-card contract (`recommendation.is_r
 ### `GET /me/dashboard`
 ```json
 {
-  "profile": {"id":"", "name":"", "programme_year":2, "academic_field":"technology", "interests":["technology","leadership"]},
+  "profile": {"id":"", "name":"", "programme_year":2, "academic_field":"technology", "career_goal":"Software Engineer", "interests":["technology","leadership"], "skills":["dsa","git_github"]},
   "gamification": {"total_xp":2340,"level":7,"level_name":"Trailblazer","xp_to_next_level":160,"weekly_streak":4,"rank":18,"completion_pct":72},
   "next_best_action": {},
   "recommendations": [],
@@ -510,7 +567,42 @@ Response shape per item — see §7's module-card contract (`recommendation.is_r
 }
 ```
 Detailed single-purpose endpoints still exist independently; this is a homepage-only rollup so the
-frontend doesn't fan out into 10 requests.
+frontend doesn't fan out into 10 requests. `completion_pct` also drives the dashboard welcome
+line the frontend renders (e.g. "you're 72% through your current learning journey," frontend spec
+§6.2) — compute it the same way as the journey map's own completion metric below so the two never
+disagree.
+
+### `GET /me/journey` (Learning Journey Map read model — frontend spec §6.7)
+```json
+{
+  "completion_pct": 72,
+  "nodes": [
+    {
+      "id": "module:uuid-or-synthetic", "title": "DSA Foundations", "category": "technology",
+      "status": "completed", "xp_reward": 40, "badge": {"code":"problem_solver"},
+      "estimated_minutes": 60, "unlock_requirement": null, "module_id": "uuid"
+    },
+    {
+      "id": "module:uuid2", "title": "Trees & Graphs", "category": "technology",
+      "status": "current", "xp_reward": 60, "badge": null,
+      "estimated_minutes": 90, "unlock_requirement": null, "module_id": "uuid2"
+    },
+    {
+      "id": "module:uuid3", "title": "System Design Foundations", "category": "technology",
+      "status": "locked", "xp_reward": 80, "badge": null,
+      "estimated_minutes": 120, "unlock_requirement": "Complete Trees & Graphs", "module_id": "uuid3"
+    }
+  ]
+}
+```
+Ordering is derived from the same recommendation inputs as §6 (career goal, interests, academic
+field, prerequisite/enrollment order) — sequenced into a single linear path rather than returned as
+an unordered relevance-ranked list like `/me/recommendations`. `status` is computed from
+`enrollments`/`reviews` state (`completed` reviews → `completed` node; the first not-yet-completed
+node in sequence → `current`; everything after it → `locked`, with `unlock_requirement` set to the
+current node's title). Do not persist a separate "path" document — this is a read model computed
+on request from existing `enrollments`/`modules`/`student_profiles` data, so it always reflects
+live progress.
 
 ### Module card contract (used by catalog, Explore, recommendations)
 ```json
@@ -532,7 +624,8 @@ frontend doesn't fan out into 10 requests.
   "mentor": {"id":"...", "name":"Priya Mehta", "organisation":"Partner Organisation"},
   "start_at": "2026-08-24T15:00:00+05:30", "end_at": "2026-08-24T16:00:00+05:30",
   "meeting_mode": "online", "meeting_link": "https://example.com/meeting",
-  "status": "scheduled"
+  "status": "scheduled", "reschedulable": true,
+  "reschedule_deadline": "2026-08-23T15:00:00+05:30"
 }
 ```
 
@@ -543,6 +636,17 @@ frontend doesn't fan out into 10 requests.
 `mentors` are records (§3.17), never authenticated. Admin owns full CRUD over
 `mentor_meetings` (§3.18) and confirms mentor-side data (e.g. `action_item_completion` for
 mentoring rubrics, §10) on the mentor's behalf. Required routes: see §5.2/§5.4.
+
+### 8b. Flexible rescheduling
+
+When Admin marks a meeting `reschedulable: true` and configures `meeting_reschedule_slots`
+(§3.18b), an affected student may move their own session to one of the admin-offered slots up
+until `deadline` (one calendar day before the current `startAt`). After the deadline, or if the
+meeting isn't reschedulable, `GET /me/meetings/:id/reschedule-slots` returns an empty list /
+`404` so the frontend can hide the affordance entirely (frontend spec §6.10). A successful
+`POST /me/meetings/:id/reschedule` updates the meeting's `startAt`/`endAt`, sets
+`status='rescheduled'`, and reuses the existing `meeting_updated` notification flow (§9) — no
+separate event type is needed for a student-initiated reschedule vs. an admin-initiated one.
 
 ---
 
@@ -647,7 +751,11 @@ review queue. It does **not** own prompt templates or scoring logic — that's `
   (`days_since_last_meaningful_activity`, `overdue_mandatory_task_count`, etc.) that drive Coach
   support-nudges and Admin escalation only.
 - **Badges**: evaluated synchronously right after every `xp_ledger` insert; idempotent via the
-  `(userId, badgeId)` unique index on `user_badges`.
+  `(userId, badgeId)` unique index on `user_badges`. Seed catalogue (matches frontend spec §6.5):
+  `first_steps` (complete first activity), `momentum` (5 activities in a week), `problem_solver`
+  (20 coding challenges), `consistent_learner` (streak milestone), `explorer` (activities across 5
+  skill categories), `project_builder` (submit first project) — each a `rule_expression` evaluated
+  against the user's aggregate stats.
 - **Leaderboard**: Redis sorted set (`ZINCRBY leaderboard:{scope}:{window} xp_amount user_id`),
   updated on every ledger write, DB (`xp_ledger` aggregation) as fallback source of truth.
 
@@ -718,22 +826,24 @@ toggles, escalation thresholds — Admin-tunable without a redeploy.
 ## 16. Build order (backend)
 
 ### Phase 1 — Auth + personalisation
-Two-role auth, `student_profiles`, `interest_domains` seed, onboarding API, edit-interests API,
-module domain tagging.
+Two-role auth, `student_profiles`, `interest_domains` + `skill_domains` seed, onboarding API
+(incl. date of birth, career goal, skills), edit-interests/edit-skills API, module domain tagging.
 
 ### Phase 2 — Core learning loop
 Admin create/publish module, student personalised catalog, enroll, submit.
 
 ### Phase 3 — Notifications
 `mentors`/`mentor_meetings`, Admin meeting CRUD, in-app notifications, email provider,
-meeting-update + module-published events end-to-end.
+meeting-update + module-published events end-to-end, `meeting_reschedule_slots` + student
+reschedule endpoint (§8b).
 
 ### Phase 4 — Scoring
 Wire `@katalyst/ai-judge` (already built in `/ai`) to the submission-created trigger, Admin review
 queue, deterministic XP, ledger writes.
 
 ### Phase 5 — Student experience
-`/me/dashboard` aggregate, `/me/recommendations`, meetings, deadlines, achievements, leaderboard.
+`/me/dashboard` aggregate, `/me/journey` (learning journey map), `/me/recommendations`, meetings,
+deadlines, achievements, leaderboard.
 
 ### Phase 6 — AI Coach
 Wire `@katalyst/ai-coach` (already built in `/ai`) to `/coach/message`, feed it live progress +

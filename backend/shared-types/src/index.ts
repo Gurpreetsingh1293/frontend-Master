@@ -1,6 +1,6 @@
-// Shared domain types — mirrors §2 (schema) and §11 (XP weighting model) of
-// Katalyst_Build_Spec_for_Claude_Code.md. Kept dependency-free so both
-// ai-judge and ai-coach (and eventually the web apps) can import it directly.
+// Shared domain types — mirrors KATALYST_BACKEND_SPEC.md §3 (schema) and KATALYST_AI_SPEC.md §2
+// (XP weighting model). Kept dependency-free so both ai-judge and ai-coach (and eventually the
+// web apps) can import it directly.
 
 export type ModuleType =
   | "training_session"

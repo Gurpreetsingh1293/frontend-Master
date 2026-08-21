@@ -1,11 +1,12 @@
 # Katalyst — AI Integration Spec (AI Judge, AI Coach, RAG, Peer Matching)
 
 > Consolidates the AI-relevant sections of `Katalyst_Build_Spec_for_Claude_Code.md` (§4, §5, §11,
-> §12, §14, §15) and the personalisation additions from `KATALYST_BACKEND_MVP_HANDOFF.md` (§18)
-> into one spec for everything living under **`/ai`** in the repo — kept separate from
-> `KATALYST_BACKEND_SPEC.md` so the AI implementation can be built/iterated independently of the
-> persistence/API layer. The backend calls into these packages as libraries; it does not
-> reimplement prompting, scoring schemas, or tool-calling logic.
+> §12, §14, §15), the personalisation additions from `KATALYST_BACKEND_MVP_HANDOFF.md` (§18), and
+> the career-goal/skills personalisation fields from the visual/UX design brief
+> (`Katalyst_Claude_Prompt.md`) into one spec for everything living under **`/ai`** in the repo —
+> kept separate from `KATALYST_BACKEND_SPEC.md` so the AI implementation can be built/iterated
+> independently of the persistence/API layer. The backend calls into these packages as libraries;
+> it does not reimplement prompting, scoring schemas, or tool-calling logic.
 
 ## Repo layout (current)
 
@@ -166,7 +167,10 @@ backend repository functions — `/ai` never talks to MongoDB directly.
 - `get_topic_performance(user_id, subject?)` → reads `student_topic_performance` (Mongo, never the
   vector-search collection) to ground personalized explanations
 - `get_student_preferences(user_id)` → **new, MVP personalisation** — returns
-  `{academic_field, programme_year, interests[]}` from `student_profiles`
+  `{academic_field, programme_year, career_goal, interests[], skills[]}` from `student_profiles`
+  (`career_goal`/`skills[]` per `KATALYST_BACKEND_SPEC.md` §3.2/§3.3b — the same fields onboarding
+  step 3–4 collects, frontend spec §6.1) — lets the Coach frame suggestions against what the
+  student is actually working toward, not just their interest tags
 - `get_personalised_recommendations(user_id)` → **new, MVP personalisation** — calls the backend's
   `/me/recommendations` logic; Coach must use these results rather than inventing course
   IDs/titles
