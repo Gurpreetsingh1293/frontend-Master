@@ -78,7 +78,7 @@ export class GeminiClient implements LlmClient {
       );
     }
     this.apiKey = apiKey;
-    this.modelName = opts?.model ?? "gemini-2.5-flash";
+    this.modelName = opts?.model ?? "gemini-3.6-flash";
   }
 
   private async getModel() {

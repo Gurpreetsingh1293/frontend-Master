@@ -27,7 +27,7 @@ see `KATALYST_BACKEND_SPEC.md` §3.23 for the `knowledge_documents`/`knowledge_c
 | Need | Provider | Notes |
 |---|---|---|
 | AI Judge + AI Coach LLM | **Groq API** (Llama 3.3 70B / Llama 4) primary | Fast, free, no card required, strong structured-output/tool-calling |
-| Fallback LLM | **Google Gemini API** free tier (Gemini 2.5 Flash) | Strong JSON-mode + tool-calling |
+| Fallback LLM | **Google Gemini API** free tier (Gemini 3.6 Flash) | Strong JSON-mode + tool-calling |
 | Content moderation (peer chat) | Same Groq/Gemini free call as a classifier | No dedicated moderation API needed |
 
 Provider selection is a single config switch in `ai/ai-client` (`GROQ_API_KEY` primary,
