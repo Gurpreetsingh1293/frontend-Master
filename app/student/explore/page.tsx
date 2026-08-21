@@ -28,11 +28,11 @@ export default function ExplorePage() {
   return (
     <div>
       <h1 className="font-serif text-3xl">Explore</h1>
-      <p className="mt-1 text-sm text-stone-600">Filters change the catalogue. Nothing here is decorative.</p>
+      <p className="mt-1 text-sm text-muted">Filters change the catalogue. Nothing here is decorative.</p>
       <div className="mt-6">
         <FilterPanel value={filters} onChange={setFilters} domains={domains} problems={problems} />
       </div>
-      <p className="mt-4 text-sm text-stone-500">{list.length} activities</p>
+      <p className="mt-4 text-sm text-muted">{list.length} activities</p>
       {list.length === 0 ? (
         <div className="mt-4">
           <EmptyState title="No activities match." hint="Widen filters." />

@@ -8,6 +8,7 @@ import { VoiceAssist } from "@/components/voice/voice-assist";
 import { usePlatform } from "@/lib/data/platform-store";
 import { levelFromXp } from "@/lib/utils";
 import { NotificationPanel } from "@/components/notifications/panel";
+import { Logo } from "@/components/logo";
 
 export function Topbar({ variant }: { variant: "student" | "admin" }) {
   const store = usePlatform();
@@ -16,23 +17,28 @@ export function Topbar({ variant }: { variant: "student" | "admin" }) {
   const profile = store.studentProfiles.find((p) => p.userId === store.sessionUserId);
   const lvl = levelFromXp(profile?.xp ?? 0);
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-white px-4 py-3">
-      <div className="flex items-center gap-3 md:hidden">
-        <MobileNav variant={variant} />
+    <header className="portal-header flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-white">
+      <div className="flex items-center gap-3">
+        <div className="md:hidden">
+          <Logo invert />
+        </div>
+        <div className="flex items-center gap-3 md:hidden">
+          <MobileNav variant={variant} />
+        </div>
+        <p className="text-sm font-medium text-white">
+          {user?.name}
+          {variant === "student" && profile ? (
+            <span className="ml-2 inline-flex items-center rounded-full bg-gold px-2.5 py-0.5 text-xs font-semibold text-plum">
+              L{lvl.level} · {profile.xp.toLocaleString()} XP
+            </span>
+          ) : null}
+        </p>
       </div>
-      <p className="text-sm text-stone-600">
-        {user?.name}
-        {variant === "student" && profile ? (
-          <span className="ml-2 text-xs">
-            L{lvl.level} · {profile.xp} XP
-          </span>
-        ) : null}
-      </p>
       <div className="flex flex-wrap items-center gap-2">
         <VoiceAssist />
         <LanguageSelector />
         <NotificationPanel audience={variant} userId={store.sessionUserId} />
-        <Link href={variant === "student" ? "/student/profile" : "/admin/settings"} className="text-sm underline">
+        <Link href={variant === "student" ? "/student/profile" : "/admin/settings"} className="px-3 py-1.5 text-sm">
           Account
         </Link>
         <Button

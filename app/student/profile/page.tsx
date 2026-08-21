@@ -21,12 +21,12 @@ export default function ProfilePage() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-xl border bg-white p-5">
+      <div className="k-card p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-800 text-white">{user?.avatar}</div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-plum text-white">{user?.avatar}</div>
           <div>
             <h1 className="font-serif text-2xl">{user?.name}</h1>
-            <p className="text-sm text-stone-600">{user?.programme}</p>
+            <p className="text-sm text-muted">{user?.programme}</p>
           </div>
         </div>
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
@@ -39,7 +39,7 @@ export default function ProfilePage() {
         <p className="mt-2 text-sm">Completed courses: {profile?.completedCourseIds.length}</p>
       </div>
       <form
-        className="space-y-3 rounded-xl border bg-white p-5"
+        className="space-y-3 k-card p-5"
         onSubmit={(e) => {
           e.preventDefault();
           if (name.trim().length < 3 || skills.trim().length < 3) return;

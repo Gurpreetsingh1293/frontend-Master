@@ -29,20 +29,20 @@ export function ChatbotPanel() {
   }
 
   return (
-    <div className="flex h-[28rem] flex-col rounded-xl border border-stone-200 bg-white">
+    <div className="k-card flex h-[28rem] flex-col overflow-hidden">
       <div className="flex-1 space-y-2 overflow-y-auto p-4 text-sm">
         {messages.map((m, i) => (
           <p key={i} className={m.role === "user" ? "text-right" : ""}>
-            <span className={m.role === "user" ? "inline-block rounded-lg bg-sand px-3 py-1.5" : "inline-block rounded-lg bg-stone-100 px-3 py-1.5"}>
+            <span className="inline-block rounded-lg bg-ivory px-3 py-1.5 text-plum">
               {m.text}
             </span>
           </p>
         ))}
-        {busy ? <p className="text-xs text-stone-500">Thinking… (mock)</p> : null}
+        {busy ? <p className="text-xs text-muted">Thinking… (mock)</p> : null}
       </div>
       <div className="flex flex-wrap gap-1 border-t p-2">
         {suggestedPrompts.map((p) => (
-          <button key={p} className="rounded-full border px-2 py-1 text-[11px]" onClick={() => send(p)}>
+          <button key={p} className="rounded-full border border-line bg-ivory px-2 py-1 text-[11px] text-plum" onClick={() => send(p)}>
             {p}
           </button>
         ))}

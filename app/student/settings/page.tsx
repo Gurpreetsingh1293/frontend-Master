@@ -9,7 +9,7 @@ export default function SettingsPage() {
   return (
     <div>
       <h1 className="font-serif text-3xl">Settings</h1>
-      <p className="mt-1 text-sm text-stone-600">Language lives in the top bar. Auth remains mock until Auth.js is wired.</p>
+      <p className="mt-1 text-sm text-muted">Language lives in the top bar. Auth remains mock until Auth.js is wired.</p>
       <form
         className="mt-6 max-w-md space-y-3"
         onSubmit={(e) => {
